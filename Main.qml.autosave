@@ -90,54 +90,6 @@ Window {
                     color: "red"
                     border.color: "#cccccc"
                     radius: 10
-
-                     Video{
-                            id: audioPlayer
-                            source: "path/to/your/audio.mp3" // Replace with your audio file path
-                        }
-
-                        // Controls for audio playback
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 20
-
-                            // Play/Pause button
-                            Button {
-                                text: audioPlayer.playbackState === Audio.PlayingState ? "Pause" : "Play"
-                                onClicked: {
-                                    if (audioPlayer.playbackState === Audio.PlayingState) {
-                                        audioPlayer.pause();
-                                    } else {
-                                        audioPlayer.play();
-                                    }
-                                }
-                            }
-
-                            // Slider for volume control
-                            Slider {
-                                id: volumeSlider
-                                from: 0
-                                to: 100
-                                value: audioPlayer.volume * 100
-                                onValueChanged: audioPlayer.volume = value / 100
-                                width: 300
-                            }
-
-                            // Slider for seeking
-                            Slider {
-                                id: positionSlider
-                                from: 0
-                                to: audioPlayer.duration
-                                value: audioPlayer.position
-                                onValueChanged: audioPlayer.seek(value)
-                                width: 300
-                            }
-
-                            // Display current position and duration
-                            Text {
-                                text: qsTr("Position: %1 / %2").arg(audioPlayer.position).arg(audioPlayer.duration)
-                            }
-                        }
                 }
 
             }
