@@ -1,152 +1,138 @@
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls 2.15
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
+import QtMultimedia
+
 Window {
     id: mainWindow
-    width: 640
-    height: 380
+    width: 650
+    height: 450
     visible: true
     title: qsTr("Recorder")
 
+    property string vPath: "video3.mp4"
+
     Rectangle {
         id: mainBox
-        color: "#282b2a"
         width: mainWindow.width
         height: mainWindow.height
+        border.color: "black"
+        border.width: 1
 
-        Rectangle {
-            id: header
-            width: mainBox.width
+        Rectangle{
+            id:leftRect
+            width: mainBox.width * 0.6
             height: mainBox.height
+            border.color: "black"
+            border.width: 1
+            Rectangle{
+                id:topLeftRect
+                width: leftRect.width
+                height: leftRect.height * 0.6
+                color: "#202121"
+                border.color: "black"
+                border.width: 1
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-
-            anchors.bottomMargin: parent.height * 0.7
-
-            Rectangle {
-                id: leftHeader
-                width: header.width * 0.65
-                height: header.height
-
-                Rectangle {
-                    id: startButtonRect
-                    color: "#181a19"
-                    width: leftHeader.width * 0.33
-                    height: leftHeader.height
-
-                    Button {
-                        id: startBtn
-                        text: "Start"
-
-                        background: Rectangle {
-                            id: startBtnstyle
-                            color: "#6e6e6e"
-                            radius: 10
-                        }
-
-                        hoverEnabled: false
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.topMargin: 30
-                        anchors.bottomMargin: 30
-                        anchors.leftMargin: 30
-                        anchors.rightMargin: 30
-
-                        onPressed: startBtnstyle.color = "#f0f2f0"
-                        onReleased: startBtnstyle.color = "#6e6e6e"
-
+                Video {
+                    id: video
+                    anchors.fill: parent
+                    source: "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Video/" + vPath
+                    autoPlay: true
+                    fillMode: Video.Stretch
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
                         onClicked: {
-                            if (!blinkTimer.running) {
-                                notificationLight.color = "red"; // Ensure the rectangle starts as red
-                                blinkTimer.start();
+                            if (video.playing) {
+                                video.pause();
+                            } else {
+                                video.play();
                             }
-
                         }
                     }
                 }
-                Rectangle {
-                    id: stopButton
-                    color: "#181a19"
-                    width: leftHeader.width * 0.33
-                    height: leftHeader.height
-
-                    anchors.left: parent.left
-                    anchors.leftMargin: leftHeader.width * 0.33
+                Row {
+                    id:playPuseBtn
+                    anchors.bottom: parent.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 10
 
                     Button {
-                        id: stopBtn
+                        text: "Play"
+                        onClicked: video.play()
+                    }
+
+                    Button {
+                        text: "Pause"
+                        onClicked: video.pause()
+                    }
+
+                    Button {
                         text: "Stop"
-                        background: Rectangle {
-                            id:stopBtnStyle
-                            color: "#6e6e6e"
-                            radius: 10
-                        }
-                        hoverEnabled: false
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.topMargin: 30
-                        anchors.bottomMargin: 30
-                        anchors.leftMargin: 30
-                        anchors.rightMargin: 30
-                        onPressed: stopBtnStyle.color = "#f0f2f0"
-                        onReleased: stopBtnStyle.color = "#6e6e6e"
-
-                        onClicked: {
-                            blinkTimer.stop();
-                        }
-                    }
-                }
-                Rectangle {
-                    id: deleteButton
-                    color: "#181a19"
-                    width: leftHeader.width * 0.33
-                    height: leftHeader.height
-
-                    anchors.left: parent.left
-                    anchors.leftMargin: leftHeader.width * 0.66
-
-                    Button {
-                        id: deleteBtn
-                        text: "Delete"
-                        background: Rectangle {
-                            id:deleteBtnStyle
-                            color: "#6e6e6e"
-                            radius: 10
-                        }
-                        hoverEnabled: false
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.topMargin: 30
-                        anchors.bottomMargin: 30
-                        anchors.leftMargin: 30
-                        anchors.rightMargin: 30
-                        onPressed: deleteBtnStyle.color = "#f0f2f0"
-                        onReleased: deleteBtnStyle.color = "#6e6e6e"
+                        onClicked: video.stop()
                     }
                 }
             }
             Rectangle{
-                id:rightHeader
-                color: "#486154" //"#181a19"
-                width: header.width * 0.37
-                height: header.height
+                id:bottomLeftRect
+
+                color: "#202121"
+
+                width: leftRect.width
+                height: leftRect.height * 0.3
 
                 anchors.left: parent.left
-                anchors.leftMargin: parent.width * 0.64
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
 
+                anchors.topMargin: leftRect.height * 0.6
+
+                border.color: "black"
+                border.width: 1
+
+                Rectangle{
+                    id:notificationLight
+                    radius: 90
+                    height: 5
+                    width: 5
+                    border.color: "black"
+                    border.width: 1
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+
+                    anchors.leftMargin: bottomLeftRect.width * 0.95
+                    anchors.topMargin: 5
+                    anchors.rightMargin: 5
+                    anchors.bottomMargin: bottomLeftRect.height * 0.9
+
+                    color: "red"
+                    Timer{
+                        id: blinkTimer
+                        interval: 1000
+                        running: true
+                        repeat: true
+
+                        onTriggered: {
+                            if(notificationLight.color === "red"){
+                                notificationLight.color= "white";
+                            }
+                            else if(notificationLight.color === "white"){
+                                notificationLight.color= "red";
+                            }
+                        }
+                    }
+                }
                 GridLayout{
+                    id:gridId
+
+                    width: bottomLeftRect.width
+                    height: bottomLeftRect.height
+
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -154,37 +140,115 @@ Window {
                     anchors.topMargin: 10
                     anchors.bottomMargin: 10
                     anchors.leftMargin: 10
-                    anchors.rightMargin: 30
+                    anchors.rightMargin: 10
+
+
                     columns: 3
                     rows: 1
                     columnSpacing: 10
-                    RadioButton{
-                        text: "Audio"
-                    }
-                    RadioButton{
-                        text: "Video"
+                    Rectangle {
+                        id: startButtonRect
+                        color: "#3c3d3d"
+                        height: gridId.height
+                        width: gridId.width * 0.3
+                        // border.color: "black"
+                        // border.width: 1
+                        radius: 90
+
+                        Button {
+                            id: startBtn
+                            text: "Start"
+
+                            background: Rectangle {
+                                id: startBtnstyle
+                                color: "#6e6e6e"
+                                radius: 90
+                            }
+
+                            hoverEnabled: false
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.topMargin: 10
+                            anchors.bottomMargin: 10
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+
+                            onPressed: startBtnstyle.color = "#f0f2f0"
+                            onReleased: startBtnstyle.color = "#6e6e6e"
+
+                            onClicked: {
+                                blinkTimer.start();
+                                video.source = "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Video/video2.mp4"
+                            }
+                        }
                     }
                     Rectangle{
-                        id:notificationLight
-                        radius: 10
-                        height: 15
-                        width: 15
-                        //color: "red"
-                        Timer{
-                            id: blinkTimer
-                            interval: 1000
-                            running: false
-                            repeat: true
+                        id: radioBtnRect
+                        // border.color: "black"
+                        // border.width: 1
+                        color: "#202121"
+                        height: parent.height
+                        width: parent.width * 0.3
 
-                            onTriggered: {
-                                if (notificationLight.color === "red") {
-                                    notificationLight.color = "white";
-                                    colorChangeTimer.interval = 500; // Set to half a second
-                                } else if (notificationLight.color === "white") {
-                                    notificationLight.color = "red";
-                                    colorChangeTimer.interval = 1000; // Set back to one second
-                                    colorChangeTimer.stop(); // Stop the timer after returning to red
-                                }
+                        GridLayout{
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.topMargin: 10
+                            anchors.bottomMargin: 50
+                            anchors.leftMargin: 30
+                            anchors.rightMargin: 10
+
+
+                            columns: 1
+                            rows: 2
+                            RadioButton{
+                                text: "Audio"
+                                checked: true
+                                font.pointSize: 10
+                            }
+                            RadioButton{
+                                text: "Video"
+                                font.pointSize:10
+                            }
+                        }
+                    }
+                    Rectangle {
+                        id: stopButton
+                        color: "#3c3d3d"
+                        // border.color: "black"
+                        // border.width: 1
+                        radius: 90
+
+                        height: parent.height
+                        width: parent.width * 0.3
+
+                        Button {
+                            id: stopBtn
+                            text: "Stop"
+                            background: Rectangle {
+                                id:stopBtnStyle
+                                color: "#6e6e6e"
+                                radius: 90
+                            }
+                            hoverEnabled: false
+
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.topMargin: 10
+                            anchors.bottomMargin: 10
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            onPressed: stopBtnStyle.color = "#f0f2f0"
+                            onReleased: stopBtnStyle.color = "#6e6e6e"
+
+                            onClicked: {
+                                blinkTimer.stop();
                             }
                         }
                     }
@@ -192,49 +256,96 @@ Window {
             }
         }
         Rectangle{
-            id: footer
-            width: mainBox.width
-            height: mainBox.height * 0.7
-            anchors.top: mainBox.top
-            color: "yellow"
-            anchors.topMargin: parent.height * 0.3
+            id:rightRect
+            width: mainBox.width * 0.4
+            height: mainBox.height
+
+            anchors.left: parent.left
+            anchors.leftMargin: mainBox.width * 0.6
+
             ScrollView {
                 id: scrollView
-                width: footer.width  // Leave space for the slider
-                height: footer.height
+                width: rightRect.width
+                height: rightRect.height
                 anchors.fill: parent
 
-                TableView {
-                    id: tableView
+                ListView  {
+                    id: listView
                     width: scrollView.width
                     height: scrollView.height
-                    model: TableModel {
-                        TableModelColumn { display: "Item" }
-                        rows:
-                        [
-                            { "Item": "Row 1"},
-                            { "Item": "Row 2"},
-                            { "Item": "Row 3"},
-                            { "Item": "Row 4"},
-                            { "Item": "Row 5"},
-                            { "Item": "Row 6"},
-                            { "Item": "Row 7"},
-                            { "Item": "Row 8"},
-                            { "Item": "Row 9"},
-                            { "Item": "Row 10"}
-                        ]
+                    model: ListModel {
+                        id:itemModel
+                        ListElement { item: "video1" }
+                        ListElement { item: "Row 2" }
+                        ListElement { item: "Row 3" }
+                        ListElement { item: "Row 4" }
+                        ListElement { item: "Row 5" }
+                        ListElement { item: "Row 6" }
+                        ListElement { item: "Row 7" }
+                        ListElement { item: "Row 8" }
+                        ListElement { item: "Row 9" }
+                        ListElement { item: "Row 10" }
+                        ListElement { item: "Row 11" }
+                        ListElement { item: "Row 12" }
+                        ListElement { item: "Row 13" }
                     }
                     delegate: Item {
-                        width: tableView.width * 0.5
+                        width: listView.width * 0.5
                         height: 50
                         Rectangle {
-                            width: tableView.width
+                            id:listRect
+                            width: listView.width
                             height: 50
-                            color: "lightgray"
+                            color: "#202121"
                             border.color: "black"
+
+                            MouseArea {
+                                id: mouseArea2
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onPressed: listRect.color = "#303030"
+                                onReleased: listRect.color = "#202121"
+
+                                onClicked: {
+                                    console.log("Clicked on:", model.item);
+                                    vPath = model.item + ".mp4"
+                                }
+                            }
+
                             Text {
                                 anchors.centerIn: parent
-                                text: model.display
+                                text: model.item
+                                color: "#d9d9d9"
+                            }
+                            Button{
+                                id:deleteBtn
+                                text: "delete"
+
+                                hoverEnabled: false
+
+                                background: Rectangle {
+                                    id:deleteBtnStyle
+                                    color: "#db2518"
+                                    radius: 10
+                                }
+
+                                anchors.left: parent.left
+                                anchors.bottom: parent.bottom
+
+                                anchors.leftMargin: parent.width * 0.7
+                                anchors.bottomMargin: parent.height * 0.26
+                                MouseArea {
+                                    id: mouseArea3
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: deleteBtnStyle.color = "#303030"
+                                    onReleased: deleteBtnStyle.color = "#db2518"
+
+                                    onClicked: {
+                                        console.log("Deleted :", model.item);
+                                        itemModel.remove(index);
+                                    }
+                                }
                             }
                         }
                     }
