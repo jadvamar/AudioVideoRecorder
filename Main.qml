@@ -18,6 +18,7 @@ Window {
         width: mainWindow.width
         height: mainWindow.height
         border.color: "black"
+        color: "#202121"
         border.width: 1
 
         Rectangle{
@@ -26,6 +27,7 @@ Window {
             height: mainBox.height
             border.color: "black"
             border.width: 1
+
             Rectangle{
                 id:topLeftRect
                 width: leftRect.width
@@ -42,6 +44,7 @@ Window {
 
                 Rectangle{
                     id: videoRect
+                    color: "#202121"
                     Video {
                         id: video
                         anchors.fill: parent
@@ -60,7 +63,6 @@ Window {
                             }
                         }
                     }
-
                     Row {
                         id:playPuseBtn
                         anchors.bottom: parent.bottom
@@ -85,61 +87,73 @@ Window {
                 }
                 Rectangle{
                     id:audioRect
-                    width: 800
-                    height: 600
-                    color: "red"
+
                     border.color: "#cccccc"
-                    radius: 10
+                    radius: 50
 
-                     Video{
-                            id: audioPlayer
-                            source: "path/to/your/audio.mp3" // Replace with your audio file path
+                    MediaPlayer {
+                        id: playMusic
+                        source: "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Audio/audio3.mp3"
+                        autoPlay: false // Enable auto-play
+                        audioOutput: AudioOutput {
+                            volume: slider.value
                         }
+                    }
 
-                        // Controls for audio playback
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 20
+                    Slider {
+                        id: slider
+                        from: 0
+                        to: 1
+                        value: 0.5 // Initial volume value
+                        anchors.bottom: parent.bottom
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width * 0.5
+                    }
 
-                            // Play/Pause button
-                            Button {
-                                text: audioPlayer.playbackState === Audio.PlayingState ? "Pause" : "Play"
-                                onClicked: {
-                                    if (audioPlayer.playbackState === Audio.PlayingState) {
-                                        audioPlayer.pause();
-                                    } else {
-                                        audioPlayer.play();
-                                    }
-                                }
-                            }
+                    Text {
+                        text:Math.round(slider.value * 100) + "%"
+                        anchors.left: slider.right
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.leftMargin: 10
+                        anchors.bottom: audioRect.bottom
+                        anchors.bottomMargin: 5
+                    }
 
-                            // Slider for volume control
-                            Slider {
-                                id: volumeSlider
-                                from: 0
-                                to: 100
-                                value: audioPlayer.volume * 100
-                                onValueChanged: audioPlayer.volume = value / 100
-                                width: 300
-                            }
 
-                            // Slider for seeking
-                            Slider {
-                                id: positionSlider
-                                from: 0
-                                to: audioPlayer.duration
-                                value: audioPlayer.position
-                                onValueChanged: audioPlayer.seek(value)
-                                width: 300
-                            }
+                    Button {
+                        text: "Play"
+                        anchors.left: parent.left
+                        anchors.bottom: slider.top
+                        anchors.leftMargin: parent.width * 0.52
 
-                            // Display current position and duration
-                            Text {
-                                text: qsTr("Position: %1 / %2").arg(audioPlayer.position).arg(audioPlayer.duration)
-                            }
-                        }
+                        anchors.bottomMargin: 10
+                        onClicked: playMusic.play() // Start playback when clicked
+                    }
+
+                    // Define Pause Button
+                    Button {
+                        text: "Pause"
+                        anchors.left: parent.left
+                        anchors.bottom: slider.top
+                        anchors.leftMargin: parent.width * 0.37
+                        anchors.bottomMargin: 10
+                        onClicked: playMusic.pause() // Pause playback when clicked
+                    }
                 }
+                Rectangle{
+                    id:cameraRect
+                    color: "blue"
+                    border.color: "#cccccc"
+                    radius: 50
+                }
+                Rectangle{
+                    id:micRect
+                    color: "green"
+                    border.color: "#cccccc"
+                    radius: 50
 
+
+                }
             }
             Rectangle{
                 id:bottomLeftRect
@@ -204,10 +218,10 @@ Window {
                     anchors.leftMargin: 10
                     anchors.rightMargin: 10
 
-
                     columns: 3
                     rows: 1
                     columnSpacing: 10
+
                     Rectangle {
                         id: startButtonRect
                         color: "#3c3d3d"
@@ -241,7 +255,22 @@ Window {
                             onReleased: startBtnstyle.color = "#6e6e6e"
 
                             onClicked: {
-                                stackView.push(audioRect);
+                                if (audioRadio.checked) {
+                                    while (stackView.depth > 1 && stackView.currentItem !== micRect) {
+                                        stackView.pop();
+                                    }
+                                    if (stackView.currentItem !== micRect) {
+                                        stackView.push(micRect);
+                                    }
+                                } else if (videoRadio.checked) {
+                                    while (stackView.depth > 1 && stackView.currentItem !== cameraRect) {
+                                        stackView.pop();
+                                    }
+                                    if (stackView.currentItem !== cameraRect) {
+                                        stackView.push(cameraRect);
+                                    }
+                                }
+                                notificationLight.color = "red";
                             }
                         }
                     }
@@ -263,17 +292,28 @@ Window {
                             anchors.leftMargin: 30
                             anchors.rightMargin: 10
 
-
                             columns: 1
                             rows: 2
                             RadioButton{
+                                id:audioRadio
                                 text: "Audio"
                                 checked: true
                                 font.pointSize: 10
+
+                                // contentItem: Text{
+                                //     text: audioRadio.text
+                                //     color: "white"
+                                // }
                             }
                             RadioButton{
+                                id:videoRadio
                                 text: "Video"
                                 font.pointSize:10
+
+                                // contentItem: Text{
+                                //     text: videoRadio.text
+                                //     color: "white"
+                                // }
                             }
                         }
                     }
@@ -309,7 +349,15 @@ Window {
                             onReleased: stopBtnStyle.color = "#6e6e6e"
 
                             onClicked: {
-                                stackView.pop();
+                                notificationLight.color="white";
+                                //stackView.pop();
+
+                                while (stackView.depth > 1 && stackView.currentItem !== audioRect) {
+                                    stackView.pop();
+                                }
+                                if (stackView.currentItem !== audioRect) {
+                                    stackView.push(audioRect);
+                                }
                             }
                         }
                     }
@@ -320,7 +368,7 @@ Window {
             id:rightRect
             width: mainBox.width * 0.4
             height: mainBox.height
-
+            color: "#202121"
             anchors.left: parent.left
             anchors.leftMargin: mainBox.width * 0.6
 
@@ -343,8 +391,8 @@ Window {
                     model: ListModel {
                         id:itemModel
                         ListElement { item: "video1" }
-                        ListElement { item: "Row 2" }
-                        ListElement { item: "Row 3" }
+                        ListElement { item: "video2" }
+                        ListElement { item: "video3" }
                         ListElement { item: "Row 4" }
                         ListElement { item: "Row 5" }
                         ListElement { item: "Row 6" }
@@ -376,6 +424,14 @@ Window {
                                 onClicked: {
                                     console.log("Clicked on:", model.item);
                                     vPath = model.item + ".mp4"
+
+                                    while (stackView.depth > 1 && stackView.currentItem !== videoRect) {
+                                        stackView.pop();
+                                    }
+                                    if (stackView.currentItem !== videoRect) {
+                                        stackView.push(videoRect);
+                                    }
+                                    video.play();
                                 }
                             }
 
