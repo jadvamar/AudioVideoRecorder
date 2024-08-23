@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
 import QtMultimedia
-
+import Qt.labs.folderlistmodel
 Window {
     id: mainWindow
     width: 650
@@ -48,7 +48,7 @@ Window {
                     Video {
                         id: video
                         anchors.fill: parent
-                        source: "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Video/" + vPath
+                        source: filePath + vPath
                         autoPlay: true
                         fillMode: Video.Stretch
                         MouseArea {
@@ -87,31 +87,54 @@ Window {
                 }
                 Rectangle{
                     id:audioRect
-
                     border.color: "#cccccc"
                     radius: 50
 
+                    Text{
+                        id:audioText
+                        text: vPath
+                        font.pixelSize: 20
+                        anchors.centerIn: parent
+                    }
+
                     MediaPlayer {
                         id: playMusic
-                        source: "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Audio/audio3.mp3"
+                        source: filePath + vPath
                         autoPlay: false // Enable auto-play
                         audioOutput: AudioOutput {
-                            volume: slider.value
+                            id:audioOutput
+                            volume: 0.4
+
                         }
                     }
+                    // Timer {
+                    //     id: updateTimer
+                    //     interval: 1000 // Update every second
+                    //     running: true
+                    //     repeat: true
+                    //     onTriggered: {
+                    //         if (playMusic.status === playMusic.Playing) {
+                    //             slider.value = playMusic.position / 1000; // Convert milliseconds to seconds
+                    //         }
+                    //     }
+                    // }
 
                     Slider {
                         id: slider
                         from: 0
                         to: 1
-                        value: 0.5 // Initial volume value
+                        value: 0.43
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.width * 0.5
+                        onValueChanged: {
+                            audioOutput.volume = slider.value
+                        }
                     }
 
                     Text {
                         text:Math.round(slider.value * 100) + "%"
+                        //text: slider.values
                         anchors.left: slider.right
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.leftMargin: 10
@@ -142,17 +165,56 @@ Window {
                 }
                 Rectangle{
                     id:cameraRect
-                    color: "blue"
+                    color: "#314463"
                     border.color: "#cccccc"
                     radius: 50
+                    Text{
+                        text : "Video Recording..."
+                        anchors.centerIn: parent
+                    }
+                    CaptureSession {
+                            id: captureSession
+                            camera: Camera {
+                                id: camera
+                                onErrorOccurred: {
+                                    console.error("Camera error: " + errorString)
+                                }
+                            }
+                            videoOutput: videoOutput
+                            recorder: MediaRecorder {
+                                id: mediaRecorderCamera
+                                onErrorOccurred: {
+                                    console.error("Recording error: " + error)
+                                }
+                                outputLocation: "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Storage/Rec_Video_1"
+                            }
+                            audioInput: AudioInput {
+                                id:audioInputCamera
+                            }
+                        }
                 }
                 Rectangle{
                     id:micRect
-                    color: "green"
+                    color: "#315563"
                     border.color: "#cccccc"
                     radius: 50
+                    Text{
+                        text : "Audio Recording..."
+                        anchors.centerIn: parent
+                    }
 
+                    CaptureSession {
+                            id: captureSessionMic
 
+                            audioInput: AudioInput {
+                                id: audioInput
+                            }
+
+                            recorder: MediaRecorder {
+                                id: mediaRecorderMic
+                                outputLocation: "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Storage/Rec_Audio_1"
+                            }
+                        }
                 }
             }
             Rectangle{
@@ -180,7 +242,8 @@ Window {
                     width: 5
                     border.color: "black"
                     border.width: 1
-
+                    color: "red"
+                    visible: false
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -191,15 +254,15 @@ Window {
                     anchors.rightMargin: 5
                     anchors.bottomMargin: bottomLeftRect.height * 0.9
 
-                    color: "white"
+
                     Timer{
                         id: blinkTimer
-                        interval: 1000
-                        running: true
+                        interval: 500
+                        running: false
                         repeat: true
 
                         onTriggered: {
-
+                            notificationLight.visible = !notificationLight.visible
                         }
                     }
                 }
@@ -262,6 +325,17 @@ Window {
                                     if (stackView.currentItem !== micRect) {
                                         stackView.push(micRect);
                                     }
+                                    if (mediaRecorderMic.recorderState === MediaRecorder.StoppedState) {
+                                        console.log("Starting recording Audio...")
+                                        mediaRecorderMic.record()
+                                        startBtn.text = "Recording..."
+                                        startBtn.enabled = false
+                                        //stopBtn.text = "Stop Recording"
+                                        stopBtn.enabled = true
+                                        //notifi.visible = true
+                                        blinkTimer.start()
+                                    }
+
                                 } else if (videoRadio.checked) {
                                     while (stackView.depth > 1 && stackView.currentItem !== cameraRect) {
                                         stackView.pop();
@@ -269,8 +343,15 @@ Window {
                                     if (stackView.currentItem !== cameraRect) {
                                         stackView.push(cameraRect);
                                     }
+                                    if (mediaRecorderCamera.recorderState === MediaRecorder.StoppedState) {
+                                        console.log("Starting recording video...")
+                                        mediaRecorderCamera.record()
+                                        startBtn.text = "Recording..."
+                                        startBtn.enabled = false
+                                        stopBtn.enabled = true
+                                        blinkTimer.start();
+                                    }
                                 }
-                                notificationLight.color = "red";
                             }
                         }
                     }
@@ -349,14 +430,20 @@ Window {
                             onReleased: stopBtnStyle.color = "#6e6e6e"
 
                             onClicked: {
-                                notificationLight.color="white";
-                                //stackView.pop();
-
-                                while (stackView.depth > 1 && stackView.currentItem !== audioRect) {
-                                    stackView.pop();
+                                if (mediaRecorderMic.recorderState === MediaRecorder.RecordingState) {
+                                    console.log("Stopping recording audio...")
+                                    mediaRecorderMic.stop()
+                                    startBtn.text = "Start"
+                                    startBtn.enabled = true
+                                    blinkTimer.stop();
                                 }
-                                if (stackView.currentItem !== audioRect) {
-                                    stackView.push(audioRect);
+                                else if(mediaRecorderCamera.recorderState === MediaRecorder.RecordingState)
+                                {
+                                    console.log("Stopping recording video...")
+                                    mediaRecorderCamera.stop();
+                                    startBtn.text = "Start"
+                                    startBtn.enabled = true
+                                    blinkTimer.stop();
                                 }
                             }
                         }
@@ -383,26 +470,10 @@ Window {
                     width: scrollView.width
                     height: scrollView.height
 
-                   //  model: FolderListModel {
-                   //     id: itemModel
-                   //     folder: "file:///C:/Qt_Applications/ProjectQt/AudioVideoRecorder/Video/"
-                   //     filters: FolderListModel.Files
-                   // }
-                    model: ListModel {
-                        id:itemModel
-                        ListElement { item: "video1" }
-                        ListElement { item: "video2" }
-                        ListElement { item: "video3" }
-                        ListElement { item: "Row 4" }
-                        ListElement { item: "Row 5" }
-                        ListElement { item: "Row 6" }
-                        ListElement { item: "Row 7" }
-                        ListElement { item: "Row 8" }
-                        ListElement { item: "Row 9" }
-                        ListElement { item: "Row 10" }
-                        ListElement { item: "Row 11" }
-                        ListElement { item: "Row 12" }
-                        ListElement { item: "Row 13" }
+                    model: FolderListModel {
+                       id: itemModel
+                       folder: filePath
+                       nameFilters: ["*.mp3" , "*.mp4" , "*.m4a"]
                     }
                     delegate: Item {
                         width: listView.width * 0.5
@@ -422,22 +493,50 @@ Window {
                                 onReleased: listRect.color = "#202121"
 
                                 onClicked: {
-                                    console.log("Clicked on:", model.item);
-                                    vPath = model.item + ".mp4"
+                                    console.log("Clicked on:", model.fileName);
+                                    vPath = model.fileName
+                                    var lastChar = fileName.slice(-1);
+                                    var substring = fileName.slice(4, 9);
+                                    console.log(substring);
+                                    if (mediaRecorderMic.recorderState === MediaRecorder.RecordingState) {
+                                        console.log("Stopping recording audio...")
+                                        mediaRecorderMic.stop()
+                                        startBtn.text = "Start"
+                                        startBtn.enabled = true
+                                        blinkTimer.stop();
+                                    }
+                                    if(mediaRecorderCamera.recorderState === MediaRecorder.RecordingState)
+                                    {
+                                        console.log("Stopping recording video...")
+                                        mediaRecorderCamera.stop();
+                                        startBtn.text = "Start"
+                                        startBtn.enabled = true
+                                        blinkTimer.stop();
+                                    }
 
-                                    while (stackView.depth > 1 && stackView.currentItem !== videoRect) {
-                                        stackView.pop();
+                                    if(lastChar === "4" || substring === "Video"){
+                                        while (stackView.depth > 1 && stackView.currentItem !== videoRect) {
+                                            stackView.pop();
+                                        }
+                                        if (stackView.currentItem !== videoRect) {
+                                            stackView.push(videoRect);
+                                        }
+                                        video.play();
                                     }
-                                    if (stackView.currentItem !== videoRect) {
-                                        stackView.push(videoRect);
+                                    else{
+                                        while (stackView.depth > 1 && stackView.currentItem !== audioRect) {
+                                            stackView.pop();
+                                        }
+                                        if (stackView.currentItem !== audioRect) {
+                                            stackView.push(audioRect);
+                                        }
+                                        playMusic.play();
                                     }
-                                    video.play();
                                 }
                             }
-
                             Text {
                                 anchors.centerIn: parent
-                                text: model.item
+                                text: model.fileName
                                 color: "#d9d9d9"
                             }
                             Button{
@@ -457,18 +556,25 @@ Window {
 
                                 anchors.leftMargin: parent.width * 0.7
                                 anchors.bottomMargin: parent.height * 0.26
-                                MouseArea {
-                                    id: mouseArea3
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onPressed: deleteBtnStyle.color = "#303030"
-                                    onReleased: deleteBtnStyle.color = "#db2518"
-
-                                    onClicked: {
-                                        console.log("Deleted :", model.item);
-                                        itemModel.remove(index);
-                                    }
+                                onClicked: {
+                                    itemModel.removeRow();
+                                    console.log("Deleted :", model.fileName);
                                 }
+
+                                // MouseArea {
+                                //     id: mouseArea3
+                                //     anchors.fill: parent
+                                //     cursorShape: Qt.PointingHandCursor
+                                //     onPressed: deleteBtnStyle.color = "#303030"
+                                //     onReleased: deleteBtnStyle.color = "#db2518"
+
+                                //     onClicked: {
+                                //         console.log("Deleted :", model.fileName);
+                                //         //itemModel.removeRow(index);
+                                //         //itemModel.removeColumn(index)
+                                //         //itemModel.remove(index);
+                                //     }
+                                // }
                             }
                         }
                     }
